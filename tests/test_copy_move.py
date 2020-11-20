@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 from pybind11_tests import copy_move_policies as m
 
@@ -19,11 +18,7 @@ def test_move_and_copy_casts():
     """Cast some values in C++ via custom type casters and count the number of moves/copies."""
 
     cstats = m.move_and_copy_cstats()
-    c_m, c_mc, c_c = (
-        cstats["MoveOnlyInt"],
-        cstats["MoveOrCopyInt"],
-        cstats["CopyOnlyInt"],
-    )
+    c_m, c_mc, c_c = cstats["MoveOnlyInt"], cstats["MoveOrCopyInt"], cstats["CopyOnlyInt"]
 
     # The type move constructions/assignments below each get incremented: the move assignment comes
     # from the type_caster load; the move construction happens when extracting that via a cast or
@@ -47,11 +42,7 @@ def test_move_and_copy_loads():
     moves/copies."""
 
     cstats = m.move_and_copy_cstats()
-    c_m, c_mc, c_c = (
-        cstats["MoveOnlyInt"],
-        cstats["MoveOrCopyInt"],
-        cstats["CopyOnlyInt"],
-    )
+    c_m, c_mc, c_c = cstats["MoveOnlyInt"], cstats["MoveOrCopyInt"], cstats["CopyOnlyInt"]
 
     assert m.move_only(10) == 10  # 1 move, c_m
     assert m.move_or_copy(11) == 11  # 1 move, c_mc
@@ -74,16 +65,12 @@ def test_move_and_copy_loads():
     assert c_m.alive() + c_mc.alive() + c_c.alive() == 0
 
 
-@pytest.mark.skipif(not m.has_optional, reason="no <optional>")
+@pytest.mark.skipif(not m.has_optional, reason='no <optional>')
 def test_move_and_copy_load_optional():
     """Tests move/copy loads of std::optional arguments"""
 
     cstats = m.move_and_copy_cstats()
-    c_m, c_mc, c_c = (
-        cstats["MoveOnlyInt"],
-        cstats["MoveOrCopyInt"],
-        cstats["CopyOnlyInt"],
-    )
+    c_m, c_mc, c_c = cstats["MoveOnlyInt"], cstats["MoveOrCopyInt"], cstats["CopyOnlyInt"]
 
     # The extra move/copy constructions below come from the std::optional move (which has to move
     # its arguments):

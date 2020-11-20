@@ -15,8 +15,8 @@
 #include <algorithm>
 #include <sstream>
 
-PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
-PYBIND11_NAMESPACE_BEGIN(detail)
+NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
+NAMESPACE_BEGIN(detail)
 
 /* SFINAE helper class used by 'is_comparable */
 template <typename T>  struct container_traits {
@@ -136,13 +136,6 @@ void vector_modifiers(enable_if_t<is_copy_constructible<typename Vector::value_t
         return v.release();
     }));
 
-    cl.def("clear",
-        [](Vector &v) {
-            v.clear();
-        },
-        "Clear the contents"
-    );
-
     cl.def("extend",
        [](Vector &v, const Vector &src) {
            v.insert(v.end(), src.begin(), src.end());
@@ -223,7 +216,7 @@ void vector_modifiers(enable_if_t<is_copy_constructible<typename Vector::value_t
             if (!slice.compute(v.size(), &start, &stop, &step, &slicelength))
                 throw error_already_set();
 
-            auto *seq = new Vector();
+            Vector *seq = new Vector();
             seq->reserve((size_t) slicelength);
 
             for (size_t i=0; i<slicelength; ++i) {
@@ -397,19 +390,14 @@ vector_buffer(Class_& cl) {
         if (!detail::compare_buffer_info<T>::compare(info) || (ssize_t) sizeof(T) != info.itemsize)
             throw type_error("Format mismatch (Python: " + info.format + " C++: " + format_descriptor<T>::format() + ")");
 
+        auto vec = std::unique_ptr<Vector>(new Vector());
+        vec->reserve((size_t) info.shape[0]);
         T *p = static_cast<T*>(info.ptr);
         ssize_t step = info.strides[0] / static_cast<ssize_t>(sizeof(T));
         T *end = p + info.shape[0] * step;
-        if (step == 1) {
-            return Vector(p, end);
-        }
-        else {
-            Vector vec;
-            vec.reserve((size_t) info.shape[0]);
-            for (; p != end; p += step)
-                vec.push_back(*p);
-            return vec;
-        }
+        for (; p != end; p += step)
+            vec->push_back(*p);
+        return vec.release();
     }));
 
     return;
@@ -418,7 +406,7 @@ vector_buffer(Class_& cl) {
 template <typename Vector, typename Class_, typename... Args>
 enable_if_t<!detail::any_of<std::is_same<Args, buffer_protocol>...>::value> vector_buffer(Class_&) {}
 
-PYBIND11_NAMESPACE_END(detail)
+NAMESPACE_END(detail)
 
 //
 // std::vector
@@ -516,7 +504,7 @@ class_<Vector, holder_type> bind_vector(handle scope, std::string const &name, A
 // std::map, std::unordered_map
 //
 
-PYBIND11_NAMESPACE_BEGIN(detail)
+NAMESPACE_BEGIN(detail)
 
 /* Fallback functions */
 template <typename, typename, typename... Args> void map_if_insertion_operator(const Args &...) { }
@@ -582,7 +570,7 @@ template <typename Map, typename Class_> auto map_if_insertion_operator(Class_ &
 }
 
 
-PYBIND11_NAMESPACE_END(detail)
+NAMESPACE_END(detail)
 
 template <typename Map, typename holder_type = std::unique_ptr<Map>, typename... Args>
 class_<Map, holder_type> bind_map(handle scope, const std::string &name, Args&&... args) {
@@ -658,4 +646,4 @@ class_<Map, holder_type> bind_map(handle scope, const std::string &name, Args&&.
     return cl;
 }
 
-PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
+NAMESPACE_END(PYBIND11_NAMESPACE)
